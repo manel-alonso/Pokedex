@@ -1,58 +1,35 @@
-import React, { FC, useEffect, useMemo, useState } from "react";
-import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
-import H1 from "../common/H1";
-import { POKEMON_URL } from "../../constants";
+import React from "react";
+import { View, FlatList } from "react-native";
+import { FAV_LIST_STYLE, HOME_STYLE, LIST_STYLE } from "./styles";
+import { Header } from "../common/Header/Header";
+import { useHomeState } from "./hooks/useHomeState";
 
-export default function Home() {
-    const [loading, setLoading] = useState(false);
-    const [results, setResults] = useState<any>([]);
+export const Home = () => {
+  const { favourites, renderItem, gatherNextPage, results, loading } =
+    useHomeState();
 
-    const placeholders = useMemo(() => [1, 2, 3, 4, 5], []);
-    
-    useEffect(() => {
-        setLoading(true);
-        fetch(POKEMON_URL)
-            .then((res: any) => res.json())
-            .then((data) => {
-                setTimeout(() => {
-                    setLoading(false);
-                    setResults(data.results);
-                }, 2000);
-            })
-    }, []);
+  return (
+    <View style={HOME_STYLE}>
+      <Header />
+      {favourites.length > 0 ? (
+        <FlatList
+          style={FAV_LIST_STYLE}
+          data={favourites}
+          renderItem={renderItem}
+          onEndReached={gatherNextPage}
+          initialNumToRender={50}
+        />
+      ) : null}
 
-    const showDetail = () => {
-        console.log("show pokemon detail");
-    };
-    
-    const capitalizedString = useMemo(() => (string: string) => {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }, []);
-
-   return loading ? 
-        <View style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-        }}>
-            <H1 t="React Native Exercise" />
-            {placeholders.map(() => {
-                return <Text style={{ fontSize: 14, textAlign: "center", marginTop: 20 }}>Loading...</Text>
-            })}
-        </View> :
-        <View style={{
-                flex: 1,
-                backgroundColor: "#fff",
-                alignItems: "center",
-                justifyContent: "center",
-            }}>
-            {<>
-            <H1 t="Pokemon List" />
-            {results.length > 0 && results.map((i) => {
-                return <TouchableOpacity onPress={() => showDetail()}>
-                            <Text style={{ fontSize: 14, textAlign: "center" }}>Pokemon: {capitalizedString(i.name)}</Text>
-                        </TouchableOpacity>
-                })}
-            </>}
-        </View>
+      {!loading ? (
+        <FlatList
+          style={LIST_STYLE}
+          data={results}
+          renderItem={renderItem}
+          onEndReached={gatherNextPage}
+          initialNumToRender={50}
+        />
+      ) : null}
+    </View>
+  );
 };
